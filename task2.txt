@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Portfolio Tracker</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .summary-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .summary-card h3 {
+            margin: 0 0 10px 0;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .summary-card .value {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin: 0;
+        }
+        
+        .add-stock-form {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 15px;
+            align-items: end;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #495057;
+        }
+        
+        input {
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            padding: 12px 24px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #218838;
+        }
+        
+        .stocks-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .stocks-table th {
+            background: #343a40;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .stocks-table td {
+            padding: 15px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .stocks-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        
+        .stocks-table tr:hover {
+            background: #e9ecef;
+        }
+        
+        .delete-btn {
+            background: #dc3545;
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+        
+        .delete-btn:hover {
+            background: #c82333;
+        }
+        
+        .positive {
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .negative {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
+        .neutral {
+            color: #6c757d;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+            font-size: 1.1em;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .stocks-table {
+                font-size: 14px;
+            }
+            
+            .stocks-table th, .stocks-table td {
+                padding: 10px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📈 Stock Portfolio Tracker</h1>
+        
+        <div class="summary-cards">
+            <div class="summary-card">
+                <h3>Total Stocks</h3>
+                <p class="value" id="totalStocks">0</p>
+            </div>
+            <div class="summary-card">
+                <h3>Total Value</h3>
+                <p class="value" id="totalValue">$0.00</p>
+            </div>
+            <div class="summary-card">
+                <h3>Total Gain/Loss</h3>
+                <p class="value" id="totalGainLoss">$0.00</p>
+            </div>
+        </div>
+        
+        <div class="add-stock-form">
+            <h3 style="margin-top: 0; color: #495057;">Add New Stock</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="stockSymbol">Stock Symbol</label>
+                    <input type="text" id="stockSymbol" placeholder="e.g., AAPL" style="text-transform: uppercase;">
+                </div>
+                <div class="form-group">
+                    <label for="shares">Shares Owned</label>
+                    <input type="number" id="shares" placeholder="100" min="0" step="0.001">
+                </div>
+                <div class="form-group">
+                    <label for="buyPrice">Buy Price ($)</label>
+                    <input type="number" id="buyPrice" placeholder="150.00" min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="currentPrice">Current Price ($)</label>
+                    <input type="number" id="currentPrice" placeholder="155.00" min="0" step="0.01">
+                </div>
+                <button onclick="addStock()">Add Stock</button>
+            </div>
+        </div>
+        
+        <div id="stocksContainer">
+            <div class="empty-state">
+                <p>No stocks in your portfolio yet. Add your first stock above!</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let portfolio = [];
+
+        function addStock() {
+            const symbol = document.getElementById('stockSymbol').value.trim().toUpperCase();
+            const shares = parseFloat(document.getElementById('shares').value);
+            const buyPrice = parseFloat(document.getElementById('buyPrice').value);
+            const currentPrice = parseFloat(document.getElementById('currentPrice').value);
+
+            if (!symbol || isNaN(shares) || isNaN(buyPrice) || isNaN(currentPrice)) {
+                alert('Please fill in all fields with valid values.');
+                return;
+            }
+
+            if (shares <= 0 || buyPrice <= 0 || currentPrice <= 0) {
+                alert('All values must be positive numbers.');
+                return;
+            }
+
+            // Check if stock already exists
+            const existingStock = portfolio.find(stock => stock.symbol === symbol);
+            if (existingStock) {
+                alert('This stock is already in your portfolio. You can delete it and add again with new values.');
+                return;
+            }
+
+            const stock = {
+                symbol: symbol,
+                shares: shares,
+                buyPrice: buyPrice,
+                currentPrice: currentPrice,
+                id: Date.now()
+            };
+
+            portfolio.push(stock);
+            updateDisplay();
+            clearForm();
+        }
+
+        function deleteStock(id) {
+            if (confirm('Are you sure you want to remove this stock from your portfolio?')) {
+                portfolio = portfolio.filter(stock => stock.id !== id);
+                updateDisplay();
+            }
+        }
+
+        function updateStockPrice(id, newPrice) {
+            const stock = portfolio.find(stock => stock.id === id);
+            if (stock) {
+                stock.currentPrice = parseFloat(newPrice);
+                updateDisplay();
+            }
+        }
+
+        function updateDisplay() {
+            updateSummary();
+            updateStocksTable();
+        }
+
+        function updateSummary() {
+            const totalStocks = portfolio.length;
+            let totalValue = 0;
+            let totalCost = 0;
+
+            portfolio.forEach(stock => {
+                totalValue += stock.shares * stock.currentPrice;
+                totalCost += stock.shares * stock.buyPrice;
+            });
+
+            const totalGainLoss = totalValue - totalCost;
+
+            document.getElementById('totalStocks').textContent = totalStocks;
+            document.getElementById('totalValue').textContent = formatCurrency(totalValue);
+            
+            const gainLossElement = document.getElementById('totalGainLoss');
+            gainLossElement.textContent = formatCurrency(totalGainLoss);
+            gainLossElement.className = totalGainLoss > 0 ? 'value positive' : 
+                                       totalGainLoss < 0 ? 'value negative' : 'value neutral';
+        }
+
+        function updateStocksTable() {
+            const container = document.getElementById('stocksContainer');
+            
+            if (portfolio.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>No stocks in your portfolio yet. Add your first stock above!</p></div>';
+                return;
+            }
+
+            let tableHTML = `
+                <table class="stocks-table">
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Shares</th>
+                            <th>Buy Price</th>
+                            <th>Current Price</th>
+                            <th>Total Value</th>
+                            <th>Gain/Loss</th>
+                            <th>Gain/Loss %</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            portfolio.forEach(stock => {
+                const totalValue = stock.shares * stock.currentPrice;
+                const totalCost = stock.shares * stock.buyPrice;
+                const gainLoss = totalValue - totalCost;
+                const gainLossPercent = ((stock.currentPrice - stock.buyPrice) / stock.buyPrice * 100);
+
+                const gainLossClass = gainLoss > 0 ? 'positive' : gainLoss < 0 ? 'negative' : 'neutral';
+
+                tableHTML += `
+                    <tr>
+                        <td><strong>${stock.symbol}</strong></td>
+                        <td>${stock.shares.toLocaleString()}</td>
+                        <td>${formatCurrency(stock.buyPrice)}</td>
+                        <td>
+                            <input type="number" value="${stock.currentPrice}" 
+                                   step="0.01" min="0" style="width: 80px; padding: 5px; border: 1px solid #ccc; border-radius: 4px;"
+                                   onchange="updateStockPrice(${stock.id}, this.value)">
+                        </td>
+                        <td><strong>${formatCurrency(totalValue)}</strong></td>
+                        <td class="${gainLossClass}">${formatCurrency(gainLoss)}</td>
+                        <td class="${gainLossClass}">${gainLossPercent.toFixed(2)}%</td>
+                        <td>
+                            <button class="delete-btn" onclick="deleteStock(${stock.id})">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += '</tbody></table>';
+            container.innerHTML = tableHTML;
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD'
+            }).format(amount);
+        }
+
+        function clearForm() {
+            document.getElementById('stockSymbol').value = '';
+            document.getElementById('shares').value = '';
+            document.getElementById('buyPrice').value = '';
+            document.getElementById('currentPrice').value = '';
+        }
+
+        // Handle Enter key for form submission
+        document.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                addStock();
+            }
+        });
+
+        // Auto-uppercase stock symbol input
+        document.getElementById('stockSymbol').addEventListener('input', function(event) {
+            event.target.value = event.target.value.toUpperCase();
+        });
+
+        // Initialize display
+        updateDisplay();
+    </script>
+</body>
+</html>
